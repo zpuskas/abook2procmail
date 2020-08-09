@@ -12,7 +12,7 @@ import logging
 import sys
 from pathlib import Path
 
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 LICENSE = "GPLv3"
 HOME = Path.home()
 
@@ -46,7 +46,7 @@ def get_email_from_abook(abook_path):
     return email_addresses
 
 
-def write_procmail_rc(rc_path, email_list):
+def write_procmail_rc(rc_path, email_list, action):
     rc_content = []
 
     # Add rule filters
@@ -67,7 +67,7 @@ def write_procmail_rc(rc_path, email_list):
     # Add rule starter line
     rc_content.insert(2, ":0")
     # Add rule action
-    rc_content.append("$MAILDIR")
+    rc_content.append(action)
 
     if rc_path:
         rc_path_resolved = Path(rc_path).expanduser()
@@ -90,18 +90,26 @@ def write_procmail_rc(rc_path, email_list):
 @click.command(help="Turn abook address book into a procmail filter rule")
 @click.version_option(version=VERSION,
                       message=f'%(prog)s v%(version)s, License: {LICENSE}')
+@click.option("--action", "-t",
+              default="$MAILDIR",
+              show_default=True,
+              help="Procmail action line override to store e-mail somewhere "
+                   "else than the default INBOX. Use /dev/null to discard "
+                   "messages, e.g. for spam filtering.")
 @click.option("--address-book", "-a",
               default=f"{HOME}/.abook/addressbook",
+              show_default=True,
               help="Path to the address book file")
 @click.option("--procmailrc", "-p",
               default=None,
-              help="Path to generated procmailrc include file (overwritten)")
-def cli(procmailrc, address_book):
+              help="Path to generated procmailrc include file (overwritten). "
+              " [default: stdout]")
+def cli(procmailrc, address_book, action):
     """
     CLI entry point. We read user options here and call the right functions
     """
     email_addresses = get_email_from_abook(address_book)
-    write_procmail_rc(procmailrc, email_addresses)
+    write_procmail_rc(procmailrc, email_addresses, action)
 
 
 if __name__ == "__main__":
