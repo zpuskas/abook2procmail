@@ -30,7 +30,7 @@ cron job (e.g. once a day) to regenerate the rc file.
 
 ## Dependencies
 
-- Python 3.8 or later
+- Python 3.7 or later
 - [click](https://click.palletsprojects.com/en/7.x/) 7.x or later
 
 ## License

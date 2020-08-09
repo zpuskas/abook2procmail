@@ -12,7 +12,7 @@ import logging
 import sys
 from pathlib import Path
 
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 LICENSE = "GPLv3"
 HOME = Path.home()
 
