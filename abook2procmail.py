@@ -9,31 +9,36 @@
 import click
 import configparser
 import logging
-import os
 import sys
+from pathlib import Path
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 LICENSE = "GPLv3"
-HOME = os.getenv("HOME")
+HOME = Path.home()
 
 
+logging.basicConfig(format='%(message)s', level=logging.WARNING)
 log = logging.getLogger("abook2procmailrc")
-log.setLevel(logging.WARNING)
 
 
 def get_email_from_abook(abook_path):
     email_addresses = []
 
+    abook_path_resolved = Path(abook_path).expanduser()
+    if not abook_path_resolved.is_file():
+        log.error(f"{abook_path_resolved} does not exist or not a file!")
+        sys.exit(1)
+
     try:
-        open(abook_path)
+        open(abook_path_resolved)
     except PermissionError:
         log.error(
-            f"Insufficient permissions: {abook_path} is not readable."
+            f"Not enough permissions: {abook_path_resolved} is not readable."
         )
         sys.exit(1)
 
     parser = configparser.ConfigParser()
-    parser.read(abook_path)
+    parser.read(abook_path_resolved)
     for section in parser.sections():
         if "email" in parser[section]:
             email_addresses.extend(parser[section]["email"].split(','))
@@ -41,30 +46,37 @@ def get_email_from_abook(abook_path):
     return email_addresses
 
 
-def write_procmail_rc(path, email_list):
+def write_procmail_rc(rc_path, email_list):
     rc_content = []
 
     # Add rule filters
     for email in email_list:
         email = email.replace(".", "\\.")
-        rc_content.append(f"*$ $SUPREME^0 ^From.*<?{email}>?$")
+        rc_content.append(f"*$ $A2P_SUPREME^0 ^From.*<?{email}>?$")
 
     # Sorting the list only helps readability, procmail will keep processing
     # rules till a match is found
     rc_content.sort()
 
+    # Add supreme scoring to the OR condition so we stop processing when
+    # email address matches. See:
+    # http://pm-doc.sourceforge.net/doc/#oring_and_score_recipe
+    rc_content.insert(0, "A2P_SUPREME=9876543210")
+    rc_content.insert(1, "")
+
     # Add rule starter line
-    rc_content.insert(0, ":0")
+    rc_content.insert(2, ":0")
     # Add rule action
     rc_content.append("$MAILDIR")
 
-    if path:
+    if rc_path:
+        rc_path_resolved = Path(rc_path).expanduser()
         try:
-            with open(path, 'w') as f:
+            with open(rc_path_resolved, 'w') as f:
                 f.write('\n'.join(rc_content))
         except PermissionError:
             log.error(
-                f"Insufficient permissions: {path} is not writeable."
+                f"Not enough permissions: {rc_path_resolved} is not writeable."
             )
             sys.exit(1)
         except Exception as e:
