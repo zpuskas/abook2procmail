@@ -18,12 +18,12 @@ line:
 INCLUDERC=$HOME/.procmail/abook.rc
 ```
 
-and enjoy e-mail from the address book landing in the INBOX.
+and enjoy e-mail from senders in the address book landing in the INBOX.
 
 If there are multiple address books, one can use the `--address-book` option to
 override the source and the `--action` option to override what to do with the
 messages. If multiple rc files are generated, multiple includes will have to be
-added.
+added into `~/.procmailrc`.
 
 To ensure that the filtering rules are up to date one can set up a periodic
 cron job (e.g. once a day) to regenerate the rc file.
